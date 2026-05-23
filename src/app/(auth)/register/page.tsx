@@ -47,7 +47,7 @@ export default function AuthPage() {
       return;
     }
 
-    router.push("/login?registered=1");
+    router.push("/login?registered=1&callbackUrl=/dashboard/billing%3Fwelcome%3D1");
     setLoading(false);
   }
 

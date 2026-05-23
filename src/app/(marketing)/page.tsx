@@ -8,12 +8,15 @@ import { AISection } from "@/components/marketing/ai-section";
 import { Individuals } from "@/components/marketing/individuals";
 import { Enterprise } from "@/components/marketing/enterprise";
 import { Pricing } from "@/components/marketing/pricing";
+import { isAnyStripePlanConfigured } from "@/lib/plans";
 import { Testimonials } from "@/components/marketing/testimonials";
 import { FAQ } from "@/components/marketing/faq";
 import { CTA } from "@/components/marketing/cta";
 import { Footer } from "@/components/marketing/footer";
 
 export default function HomePage() {
+  const stripeEnabled = isAnyStripePlanConfigured();
+
   return (
     <>
       <Navbar />
@@ -26,7 +29,7 @@ export default function HomePage() {
         <AISection />
         <Individuals />
         <Enterprise />
-        <Pricing />
+        <Pricing stripeEnabled={stripeEnabled} />
         <Testimonials />
         <FAQ />
         <CTA />

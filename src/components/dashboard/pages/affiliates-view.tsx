@@ -9,30 +9,60 @@ import { PageHeader, PageShell } from "@/components/dashboard/page-shell";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import type { AffiliateData } from "@/lib/dashboard/queries";
 import { formatEuro } from "@/lib/dashboard/metrics";
+import type { Plan } from "@prisma/client";
+import { PLANS } from "@/lib/constants";
 
 type AffiliatesViewProps = {
   affiliate: AffiliateData;
   commissionPercent: string;
   appUrl: string;
+  planAllowsAffiliates: boolean;
+  currentPlan: Plan;
 };
 
-export function AffiliatesView({ affiliate, commissionPercent, appUrl }: AffiliatesViewProps) {
+export function AffiliatesView({
+  affiliate,
+  commissionPercent,
+  appUrl,
+  planAllowsAffiliates,
+  currentPlan,
+}: AffiliatesViewProps) {
   const link = affiliate.code ? `${appUrl}/?ref=${affiliate.code}` : null;
   const clicks = affiliate.conversions.length;
   const conversions = affiliate.conversions.length;
   const pendingCents = affiliate.totalEarnings;
+
+  if (!planAllowsAffiliates) {
+    return (
+      <PageShell className="space-y-8">
+        <PageHeader
+          title="Programa de Afiliados"
+          description={`Comissão de ${commissionPercent}% — disponível no plano Pro ou superior`}
+        />
+        <EmptyState
+          icon={Users}
+          title={`Disponível no plano ${PLANS.PRO.name}`}
+          description={`Seu plano atual é ${PLANS[currentPlan].name}. Faça upgrade para indicar clientes e ganhar comissão recorrente em euros.`}
+          actionLabel="Ver planos"
+          actionHref="/dashboard/billing"
+        />
+      </PageShell>
+    );
+  }
 
   if (!affiliate.code) {
     return (
       <PageShell className="space-y-8">
         <PageHeader
           title="Programa de Afiliados"
-          description={`Comissão de ${commissionPercent}% — ative no plano Pro`}
+          description={`Comissão de ${commissionPercent}% no plano ${PLANS[currentPlan].name}`}
         />
         <EmptyState
           icon={Users}
-          title="Programa não ativado"
-          description="Seu usuário ainda não participa do programa de afiliados. Ative quando estiver disponível no seu plano."
+          title="Ative seu link de afiliado"
+          description="Entre em contato ou aguarde a ativação automática do programa no seu workspace."
+          actionLabel="Falar com suporte"
+          actionHref="mailto:suporte@nexly.app?subject=Afiliados"
         />
       </PageShell>
     );
