@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, MonitorPlay, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MagneticButton } from "@/components/shared/magnetic-button";
 import { BlurReveal } from "@/components/marketing/premium/blur-reveal";
@@ -79,7 +79,7 @@ export function CTA() {
               />
             ))}
 
-            <div className="relative">
+            <motion.div className="relative">
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -88,7 +88,7 @@ export function CTA() {
                 className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-500/25 bg-violet-500/10 px-4 py-1.5 text-xs font-medium text-violet-300 backdrop-blur-md sm:text-sm"
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                Conta demo disponível
+                Comece grátis hoje
               </motion.div>
 
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
@@ -126,11 +126,10 @@ export function CTA() {
                     <Button
                       variant="glow"
                       size="lg"
-                      className="cta-demo-btn group relative h-14 min-w-[220px] overflow-hidden border-0 px-8 text-base shadow-glow-lg sm:min-w-[240px] sm:px-10 sm:text-lg"
+                      className="group relative h-14 min-w-[220px] overflow-hidden border-0 px-8 text-base shadow-glow-lg sm:min-w-[240px] sm:px-10 sm:text-lg"
                       asChild
                     >
-                      <Link href="/demo">
-                        <MonitorPlay className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+                      <Link href="/#precos">
                         {ptBR.cta.secondary}
                         <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
                       </Link>
@@ -148,7 +147,7 @@ export function CTA() {
               >
                 {ptBR.cta.footnote}
               </motion.p>
-            </div>
+            </motion.div>
           </motion.div>
         </BlurReveal>
       </div>

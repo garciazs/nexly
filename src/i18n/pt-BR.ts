@@ -30,7 +30,7 @@ export const ptBR = {
     subtitle:
       "Teste a plataforma agora e veja como empresas modernas gerenciam receita, afiliados e equipes em um único lugar.",
     primary: "Começar agora",
-    secondary: "Ver conta demo",
+    secondary: "Ver planos",
     footnote: "Sem cartão de crédito • Configuração em minutos",
   },
   pricing: {

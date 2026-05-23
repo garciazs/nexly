@@ -8,6 +8,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
 import { authConfig } from "@/auth.config";
+import { DEMO_EMAIL, isDemoEmail, isValidDemoAccessSecret } from "@/lib/demo-account";
 
 const oauthProviders: Provider[] = [];
 if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
@@ -39,8 +40,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "E-mail", type: "email" },
         password: { label: "Senha", type: "password" },
+        demoAccessKey: { label: "Demo access key", type: "text" },
       },
       async authorize(credentials) {
+        const email = String(credentials?.email ?? "");
+
+        if (isDemoEmail(email)) {
+          if (!isValidDemoAccessSecret(String(credentials?.demoAccessKey ?? ""))) {
+            return null;
+          }
+          const demoUser = await prisma.user.findUnique({ where: { email: DEMO_EMAIL } });
+          if (!demoUser) return null;
+          return {
+            id: demoUser.id,
+            email: demoUser.email,
+            name: demoUser.name,
+            image: demoUser.image,
+            role: demoUser.role,
+          };
+        }
+
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
         const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
