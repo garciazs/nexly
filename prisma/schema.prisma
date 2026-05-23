@@ -1,0 +1,334 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum Plan {
+  STARTER
+  PRO
+  BUSINESS
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
+  INCOMPLETE
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum AffiliateStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum PayoutStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(USER)
+  locale        String    @default("pt-BR")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  memberships   OrganizationMember[]
+  tasks         Task[]    @relation("TaskAssignee")
+  notifications Notification[]
+  apiKeys       ApiKey[]
+  auditLogs     AuditLog[]
+  affiliate     Affiliate?
+  chats         ChatMessage[]
+  uploads       Upload[]
+  deviceSessions DeviceSession[]
+  ownedOrgs     Organization[] @relation("OrgOwner")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  logo         String?
+  ownerId      String
+  owner        User     @relation("OrgOwner", fields: [ownerId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  members      OrganizationMember[]
+  subscription Subscription?
+  teams        Team[]
+  tasks        Task[]
+  invitations  Invitation[]
+  apiKeys      ApiKey[]
+  auditLogs    AuditLog[]
+}
+
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String
+  role           String       @default("member")
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([organizationId, userId])
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan                 Plan               @default(STARTER)
+  status               SubscriptionStatus @default(TRIALING)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  payments             Payment[]
+}
+
+model Payment {
+  id              String       @id @default(cuid())
+  subscriptionId  String
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount          Int
+  currency        String       @default("eur")
+  stripePaymentId String?      @unique
+  status          String
+  createdAt       DateTime     @default(now())
+}
+
+model Affiliate {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code          String   @unique
+  commission    Float    @default(0.2)
+  status        AffiliateStatus @default(PENDING)
+  totalEarnings Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  conversions   AffiliateConversion[]
+  payouts       AffiliatePayout[]
+}
+
+model AffiliateConversion {
+  id          String    @id @default(cuid())
+  affiliateId String
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  amount      Int
+  commission  Int
+  referredEmail String?
+  createdAt   DateTime  @default(now())
+}
+
+model AffiliatePayout {
+  id          String       @id @default(cuid())
+  affiliateId String
+  affiliate   Affiliate    @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  amount      Int
+  status      PayoutStatus @default(PENDING)
+  paidAt      DateTime?
+  createdAt   DateTime     @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  type      String   @default("info")
+  createdAt DateTime @default(now())
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  title          String
+  description    String?
+  status         TaskStatus   @default(TODO)
+  priority       TaskPriority @default(MEDIUM)
+  dueDate        DateTime?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assigneeId     String?
+  assignee       User?        @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model ApiKey {
+  id             String        @id @default(cuid())
+  name           String
+  keyHash        String
+  prefix         String
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime      @default(now())
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  action         String
+  entity         String
+  entityId       String?
+  metadata       Json?
+  userId         String?
+  user           User?         @relation(fields: [userId], references: [id])
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  ipAddress      String?
+  createdAt      DateTime      @default(now())
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  enabled     Boolean  @default(false)
+  planMin     Plan?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Team {
+  id             String       @id @default(cuid())
+  name           String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members        TeamMember[]
+  createdAt      DateTime     @default(now())
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  role   String @default("member")
+  @@unique([teamId, userId])
+}
+
+model Invitation {
+  id             String           @id @default(cuid())
+  email          String
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           String           @default("member")
+  token          String           @unique
+  status         InvitationStatus @default(PENDING)
+  expiresAt      DateTime
+  createdAt      DateTime         @default(now())
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId    String   @default("general")
+  createdAt DateTime @default(now())
+}
+
+model Upload {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  size      Int
+  mimeType  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model DeviceSession {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  device     String
+  browser    String?
+  ip         String?
+  lastActive DateTime @default(now())
+  createdAt  DateTime @default(now())
+}
