@@ -10,3 +10,4 @@ dist
 coverage
 .vercel
 ACESSO-DEMO.txt
+.env.vercel
