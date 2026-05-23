@@ -1,0 +1,13 @@
+{
+  "terminal.integrated.defaultProfile.windows": "Nexly",
+  "terminal.integrated.profiles.windows": {
+    "Nexly": {
+      "path": "C:\\Windows\\System32\\cmd.exe",
+      "args": ["/K", "set PATH=C:\\Program Files\\Git\\cmd;C:\\Program Files\\nodejs;%PATH% && cd /d D:\\nexly && echo Git + Node ativos && git --version && node --version"]
+    },
+    "PowerShell": {
+      "path": "powershell.exe",
+      "args": ["-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "$env:Path = 'C:\\Program Files\\Git\\cmd;C:\\Program Files\\nodejs;' + $env:Path; Set-Location D:\\nexly; Write-Host 'Git + Node ativos' -ForegroundColor Green"]
+    }
+  }
+}

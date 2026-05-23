@@ -1,0 +1,90 @@
+# ═══════════════════════════════════════════════════
+#  NEXLY — SÓ 3 COISAS PARA VOCÊ FAZER (15 min)
+# ═══════════════════════════════════════════════════
+
+## ✅ O que EU posso fazer por você (aqui no Cursor)
+
+Se você colar no chat as **2 URLs do Supabase**, eu:
+- Configuro o `.env`
+- Crio as tabelas (`db:push`)
+- Crio a conta demo (`db:seed`)
+- Preparo o git commit
+
+---
+
+## 🔴 O que SÓ VOCÊ pode fazer (precisa login/senha sua)
+
+Ninguém consegue entrar na sua conta Supabase/Vercel/GitHub por você.
+Mas são só **3 sites**, poucos cliques cada:
+
+---
+
+### 1️⃣ Supabase (5 min) — banco de dados
+
+1. Abra: https://supabase.com → **Start your project** (login Google)
+2. **New project** → Name: `nexly` → crie uma senha → **Create**
+3. Espere ~2 min
+4. Clique **⚙️ Project Settings** → **Database**
+5. Em **Connection string** → aba **URI** → Mode: **Transaction pooler**
+   - Copie a URL (porta **6543**)
+6. Mude Mode para **Session pooler** (ou Direct)
+   - Copie a URL (porta **5432**)
+
+**Me mande as 2 URLs no chat** (pode trocar a senha por *** se quiser, mas aí você cola a senha real no script)
+
+**OU** dê duplo clique em: `configurar-supabase.cmd` e cole as URLs lá.
+
+---
+
+### 2️⃣ GitHub (3 min) — guardar código
+
+1. https://github.com/new
+2. Repository name: `nexly` → **Create repository**
+3. No terminal do Cursor:
+
+```
+git remote add origin https://github.com/SEU_USUARIO/nexly.git
+git push -u origin main
+```
+
+(Se pedir senha, use **Personal Access Token** do GitHub, não a senha normal)
+
+---
+
+### 3️⃣ Vercel (5 min) — site no ar
+
+1. https://vercel.com → **Sign Up** com GitHub
+2. **Add New → Project** → escolha `nexly`
+3. Em **Environment Variables**, adicione:
+
+   DATABASE_URL = (URL porta 6543 do Supabase)
+   DIRECT_URL   = (URL porta 5432 do Supabase)
+   AUTH_SECRET  = qualquer-texto-longo-aleatorio-123
+   AUTH_URL     = https://nexly.vercel.app  (ajuste depois do deploy)
+   NEXT_PUBLIC_APP_URL = mesma coisa
+   NEXT_PUBLIC_APP_NAME = Nexly
+
+4. **Deploy** → pronto!
+
+Depois copie a URL real (ex: nexly-abc123.vercel.app) e atualize AUTH_URL → Redeploy.
+
+---
+
+## 🚀 Atalho local (sem Supabase ainda)
+
+```
+iniciar.cmd          → site local
+configurar-supabase.cmd  → configura banco quando tiver as URLs
+build.cmd            → testar build
+```
+
+---
+
+## 💬 Me mande isso no chat que eu faço o resto:
+
+```
+URL 6543: postgresql://postgres.xxxxx:...
+URL 5432: postgresql://postgres.xxxxx:...
+```
+
+Eu configuro tudo no seu PC automaticamente.

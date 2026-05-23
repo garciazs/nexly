@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { PLANS } from "@/lib/constants";
 
 export async function POST(req: Request) {
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     if (!planConfig || !("stripePriceId" in planConfig) || !planConfig.stripePriceId) {
       return NextResponse.json({ error: "Plano inválido" }, { status: 400 });
     }
-    const checkout = await stripe.checkout.sessions.create({
+    const checkout = await getStripe().checkout.sessions.create({
       mode: "subscription",
       customer_email: session.user.email,
       line_items: [{ price: planConfig.stripePriceId, quantity: 1 }],

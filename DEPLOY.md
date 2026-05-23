@@ -1,120 +1,126 @@
-# Colocar o Nexly no ar
+# Colocar o Nexly no ar (Supabase + Vercel)
 
-Guia passo a passo para publicar o site em produção (grátis para começar).
-
----
-
-## Por que dá erro?
-
-| Erro | Causa | Solução |
-|------|--------|---------|
-| `EPERM` no `prisma generate` | `npm run dev` está rodando | Feche o terminal do dev (Ctrl+C) antes do build |
-| Login/demo não funciona online | SQLite local não funciona na Vercel | Use PostgreSQL (Neon) — ver abaixo |
-| `Configuration` no login | `AUTH_SECRET` ou `DATABASE_URL` faltando | Configure variáveis no painel da Vercel |
-| Build falha na Vercel | Banco SQLite em produção | Troque para PostgreSQL |
-
-**Importante:** o projeto usa **SQLite só no seu PC**. Na internet você **precisa de PostgreSQL**.
+Guia passo a passo para publicar o site em produção.
 
 ---
 
-## Opção recomendada: Vercel + Neon (grátis)
+## Stack de deploy
 
-### 1. Testar build local (antes de publicar)
+| Serviço | Função |
+|---------|--------|
+| **Supabase** | Banco PostgreSQL (grátis) |
+| **GitHub** | Código do projeto |
+| **Vercel** | Site online |
 
-```powershell
-# Pare o servidor de desenvolvimento (Ctrl+C no terminal do npm run dev)
+---
 
-cd d:\nexly
-npm run build
-npm run start
+## PASSO 1 — Criar projeto no Supabase
+
+1. Acesse [https://supabase.com](https://supabase.com) → **Start your project**
+2. **New project** → nome: `nexly` → crie uma senha forte (guarde!)
+3. Aguarde o projeto ficar pronto (~2 min)
+
+### Copiar as URLs de conexão
+
+1. No Supabase: **Project Settings** (engrenagem) → **Database**
+2. Em **Connection string**, escolha **URI**
+3. Copie duas URLs:
+
+**Transaction pooler** (porta **6543**) — use como `DATABASE_URL`:
+```
+postgresql://postgres.xxxxx:[SENHA]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
 ```
 
-Abra http://localhost:3000 — se carregar, o build está OK.
-
----
-
-### 2. Criar banco PostgreSQL (Neon)
-
-1. Acesse [https://neon.tech](https://neon.tech) e crie conta grátis
-2. **New Project** → nome `nexly`
-3. Copie a **Connection string** (formato `postgresql://...`)
-
----
-
-### 3. Ajustar Prisma para PostgreSQL
-
-Abra `prisma/schema.prisma` e altere:
-
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+**Session pooler / Direct** (porta **5432**) — use como `DIRECT_URL`:
+```
+postgresql://postgres.xxxxx:[SENHA]@aws-0-sa-east-1.pooler.supabase.com:5432/postgres
 ```
 
-No `.env` local (para testar com Neon):
+Substitua `[SENHA]` pela senha do banco e `xxxxx` pelo ref do projeto.
+
+---
+
+## PASSO 2 — Configurar o `.env` local
+
+Abra `D:\nexly\.env` e cole:
 
 ```env
-DATABASE_URL="postgresql://usuario:senha@ep-xxx.region.aws.neon.tech/nexly?sslmode=require"
+DATABASE_URL="postgresql://postgres.xxxxx:SUA_SENHA@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.xxxxx:SUA_SENHA@aws-0-sa-east-1.pooler.supabase.com:5432/postgres"
+AUTH_SECRET="nexly-prod-secret-troque-por-algo-longo"
+AUTH_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_NAME="Nexly"
 ```
 
-Rode uma vez:
+O `prisma/schema.prisma` já está configurado para **PostgreSQL + Supabase**.
 
-```powershell
+### Criar tabelas e conta demo
+
+```cmd
+cd D:\nexly
 npm run db:push
 npm run db:seed
 ```
 
-Isso cria tabelas e a conta demo (`demo@nexly.app` / `senha123`).
+Conta demo criada: `demo@nexly.app` / `senha123`
 
 ---
 
-### 4. Subir código no GitHub
+## PASSO 3 — Testar build
 
-Instale Git se não tiver: [https://git-scm.com/download/win](https://git-scm.com/download/win)
+Pare o `npm run dev` (Ctrl+C) e rode:
 
-```powershell
-cd d:\nexly
-git init
-git add .
-git commit -m "Deploy inicial Nexly"
+```cmd
+build.cmd
 ```
 
-Crie repositório em [https://github.com/new](https://github.com/new) e:
+Ou:
 
-```powershell
-git remote add origin https://github.com/SEU_USUARIO/nexly.git
+```cmd
+npm run build
+```
+
+---
+
+## PASSO 4 — GitHub
+
+1. Crie repo em [github.com/new](https://github.com/new) → nome `nexly` (vazio)
+2. No terminal:
+
+```cmd
+cd D:\nexly
+git add .
+git commit -m "supabase deploy"
 git branch -M main
+git remote add origin https://github.com/SEU_USUARIO/nexly.git
 git push -u origin main
 ```
 
 ---
 
-### 5. Deploy na Vercel
+## PASSO 5 — Vercel
 
-1. Acesse [https://vercel.com](https://vercel.com) → login com GitHub
-2. **Add New → Project** → importe o repositório `nexly`
-3. Em **Environment Variables**, adicione:
+1. [vercel.com](https://vercel.com) → login com GitHub
+2. **Add New → Project** → importe `nexly`
+3. **Environment Variables**:
 
 | Variável | Valor |
 |----------|--------|
-| `DATABASE_URL` | Connection string do Neon |
-| `AUTH_SECRET` | Gere com: `npx auth secret` ou string aleatória longa |
-| `AUTH_URL` | `https://SEU-DOMINIO.vercel.app` |
-| `NEXT_PUBLIC_APP_URL` | `https://SEU-DOMINIO.vercel.app` |
+| `DATABASE_URL` | URL pooler Supabase (porta **6543**, com `?pgbouncer=true`) |
+| `DIRECT_URL` | URL direta Supabase (porta **5432**) |
+| `AUTH_SECRET` | String longa aleatória |
+| `AUTH_URL` | `https://SEU-PROJETO.vercel.app` |
+| `NEXT_PUBLIC_APP_URL` | Mesma URL |
 | `NEXT_PUBLIC_APP_NAME` | `Nexly` |
 
-4. Clique **Deploy**
+4. **Deploy**
 
-Na primeira vez, após o deploy, rode o seed **no seu PC** apontando para o Neon (mesmo `DATABASE_URL` do passo 3):
-
-```powershell
-npm run db:seed
-```
+Após o deploy, confira se `AUTH_URL` usa a URL **real** da Vercel e faça **Redeploy** se necessário.
 
 ---
 
-### 6. Testar produção
+## PASSO 6 — Testar online
 
 - Site: `https://seu-projeto.vercel.app`
 - Demo: `https://seu-projeto.vercel.app/demo`
@@ -122,58 +128,31 @@ npm run db:seed
 
 ---
 
-## Variáveis opcionais (depois)
+## Erros comuns
 
-```env
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-AUTH_GOOGLE_ID=
-AUTH_GOOGLE_SECRET=
-UPLOADTHING_TOKEN=
-```
-
----
-
-## Opção alternativa: Railway (tudo em um lugar)
-
-1. [https://railway.app](https://railway.app) → New Project
-2. **Deploy from GitHub** + **Add PostgreSQL**
-3. Conecte `DATABASE_URL` automaticamente
-4. Mesmas variáveis `AUTH_SECRET`, `AUTH_URL`, etc.
+| Erro | Solução |
+|------|---------|
+| `EPERM` no build | Pare `npm run dev` ou use `build.cmd` |
+| Login não funciona | Rode `npm run db:seed` com Supabase no `.env` |
+| `Can't reach database` na Vercel | Use URL pooler (6543) em `DATABASE_URL` |
+| `db:push` falha | Use `DIRECT_URL` (5432) no `.env` |
+| Prepared statement error | Adicione `?pgbouncer=true` na `DATABASE_URL` |
 
 ---
 
-## Checklist rápido
+## Alternativa: Neon
 
-- [ ] `npm run dev` **parado** ao rodar build
-- [ ] `npm run build` passa sem erro
-- [ ] Prisma em **postgresql** (não sqlite)
-- [ ] `DATABASE_URL` do Neon configurada
-- [ ] `AUTH_SECRET` definido
-- [ ] `AUTH_URL` = URL real do site
-- [ ] `npm run db:seed` executado no banco de produção
+Se preferir Neon em vez de Supabase, use só `DATABASE_URL` (sem `DIRECT_URL`) e remova `directUrl` do `schema.prisma`.
 
 ---
 
 ## Comandos úteis
 
-```powershell
-# Build de produção
-npm run build
-
-# Rodar como produção local
-npm run start
-
-# Recriar banco + demo
-npm run db:setup
-
-# Só popular conta demo
-npm run db:seed
+```cmd
+npm run db:push    rem cria/atualiza tabelas
+npm run db:seed    rem conta demo
+npm run build      rem build produção
+iniciar.cmd        rem site local
 ```
 
----
-
-## Precisa de ajuda?
-
-Se o deploy falhar na Vercel, abra **Deployments → Logs** e copie a mensagem de erro. Os erros mais comuns são `DATABASE_URL` ausente ou Prisma ainda em SQLite.
+Veja também o painel Supabase → **Table Editor** para visualizar os dados.

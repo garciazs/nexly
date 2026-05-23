@@ -42,15 +42,15 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 Veja o guia completo: **[DEPLOY.md](./DEPLOY.md)**
 
-Resumo:
-1. Pare `npm run dev` antes de `npm run build`
-2. Use **PostgreSQL** (Neon) — SQLite não funciona na Vercel
-3. Deploy em **[Vercel](https://vercel.com)** + variáveis `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`
+Resumo deploy (Supabase + Vercel):
 
-```powershell
-# Verificar se está pronto para publicar
-powershell -File scripts/check-deploy.ps1
-```
+1. [supabase.com](https://supabase.com) → criar projeto → copiar URLs
+2. Colocar `DATABASE_URL` + `DIRECT_URL` no `.env`
+3. `npm run db:push` + `npm run db:seed`
+4. GitHub → `git push`
+5. [vercel.com](https://vercel.com) → importar repo → variáveis → Deploy
+
+Guia completo: **[DEPLOY.md](./DEPLOY.md)**
 
 ## Scripts
 
