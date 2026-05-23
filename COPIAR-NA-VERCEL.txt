@@ -1,0 +1,57 @@
+═══════════════════════════════════════════════════════════
+  NEXLY — COPIE CADA LINHA NA VERCEL (Environment Variables)
+═══════════════════════════════════════════════════════════
+
+Abra: publicar-vercel.cmd  (ele abre a Vercel no navegador)
+
+Na tela da Vercel, ANTES de clicar Deploy, clique em
+"Environment Variables" e adicione uma por uma:
+
+───────────────────────────────────────────────────────────
+Nome: DATABASE_URL
+Valor:
+postgresql://postgres:1504garciA%402009@db.lsqyoscrahjlxnjiuytr.supabase.co:6543/postgres?pgbouncer=true
+───────────────────────────────────────────────────────────
+Nome: DIRECT_URL
+Valor:
+postgresql://postgres:1504garciA%402009@db.lsqyoscrahjlxnjiuytr.supabase.co:5432/postgres
+───────────────────────────────────────────────────────────
+Nome: AUTH_SECRET
+Valor:
+nexly-supabase-prod-8f3a2b1c9d4e5f6a7b8c
+───────────────────────────────────────────────────────────
+Nome: AUTH_TRUST_HOST
+Valor:
+true
+───────────────────────────────────────────────────────────
+Nome: AUTH_URL
+Valor:
+https://nexly.vercel.app
+(pode deixar assim por enquanto — login funciona com AUTH_TRUST_HOST)
+───────────────────────────────────────────────────────────
+Nome: NEXT_PUBLIC_APP_URL
+Valor:
+https://nexly.vercel.app
+(ajuste depois se a URL for diferente, ex: nexly-abc123.vercel.app)
+───────────────────────────────────────────────────────────
+Nome: NEXT_PUBLIC_APP_NAME
+Valor:
+Nexly
+───────────────────────────────────────────────────────────
+
+DEPOIS: clique Deploy e espere ~2 minutos.
+
+Quando terminar, a Vercel mostra a URL do site (exemplo abaixo).
+Anote essa URL e teste:
+
+  https://SUA-URL.vercel.app
+  https://SUA-URL.vercel.app/demo
+
+Login demo: demo@nexly.app  /  senha123
+
+Se a URL for DIFERENTE de nexly.vercel.app:
+  Vercel → Settings → Environment Variables
+  → mude AUTH_URL e NEXT_PUBLIC_APP_URL para a URL real
+  → Deployments → ... → Redeploy
+
+═══════════════════════════════════════════════════════════
