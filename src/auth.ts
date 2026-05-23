@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
 import { authConfig } from "@/auth.config";
 import { DEMO_EMAIL, isDemoEmail, isValidDemoAccessSecret } from "@/lib/demo-account";
+import { ensureUserOrganization } from "@/lib/tenant-db";
 
 const oauthProviders: Provider[] = [];
 if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
@@ -33,6 +34,13 @@ if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(prisma),
+  events: {
+    async createUser({ user }) {
+      if (user.id) {
+        await ensureUserOrganization(user.id, user.name);
+      }
+    },
+  },
   providers: [
     ...oauthProviders,
     Credentials({

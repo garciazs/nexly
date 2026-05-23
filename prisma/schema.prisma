@@ -134,6 +134,7 @@ model Organization {
   invitations  Invitation[]
   apiKeys      ApiKey[]
   auditLogs    AuditLog[]
+  chatMessages ChatMessage[]
 }
 
 model OrganizationMember {
@@ -241,8 +242,8 @@ model ApiKey {
   prefix         String
   userId         String
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   lastUsedAt     DateTime?
   expiresAt      DateTime?
   createdAt      DateTime      @default(now())
@@ -256,8 +257,8 @@ model AuditLog {
   metadata       Json?
   userId         String?
   user           User?         @relation(fields: [userId], references: [id])
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   ipAddress      String?
   createdAt      DateTime      @default(now())
 }
@@ -304,12 +305,16 @@ model Invitation {
 }
 
 model ChatMessage {
-  id        String   @id @default(cuid())
-  content   String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  roomId    String   @default("general")
-  createdAt DateTime @default(now())
+  id             String       @id @default(cuid())
+  content        String
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  roomId         String       @default("general")
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, roomId])
 }
 
 model Upload {

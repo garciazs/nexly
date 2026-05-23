@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { getStripe } from "@/lib/stripe";
 import { PLANS } from "@/lib/constants";
+import { requireTenant } from "@/lib/tenant";
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.email) {
+    const tenant = await requireTenant().catch(() => null);
+    if (!tenant) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+    const session = tenant.user;
+    if (!session?.email) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
     const { plan } = await req.json();
@@ -16,11 +20,15 @@ export async function POST(req: Request) {
     }
     const checkout = await getStripe().checkout.sessions.create({
       mode: "subscription",
-      customer_email: session.user.email,
+      customer_email: session.email,
       line_items: [{ price: planConfig.stripePriceId, quantity: 1 }],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?success=1`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?canceled=1`,
-      metadata: { plan, userId: session.user.id ?? "" },
+      metadata: {
+        plan,
+        userId: tenant.userId,
+        organizationId: tenant.organizationId,
+      },
       currency: "eur",
       billing_address_collection: "required",
       tax_id_collection: { enabled: true },

@@ -21,6 +21,8 @@ import { cn } from "@/lib/utils";
 import type { DashboardTask } from "@/lib/dashboard/queries";
 import type { TaskPriority, TaskStatus } from "@prisma/client";
 import { HoverSurface } from "@/components/motion/hover-surface";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { ListTodo } from "lucide-react";
 
 const STATUS_CONFIG: Record<
   TaskStatus,
@@ -216,11 +218,17 @@ export function TasksView({ initialTasks }: { initialTasks: DashboardTask[] }) {
           })}
         </AnimatePresence>
 
-        {filtered.length === 0 && (
+        {tasks.length === 0 ? (
+          <EmptyState
+            icon={ListTodo}
+            title="Nenhuma tarefa ainda"
+            description="Seu workspace está vazio. Crie a primeira tarefa para começar a organizar o trabalho."
+          />
+        ) : filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/60 py-12 text-center text-muted-foreground">
-            Nenhuma tarefa encontrada.
+            Nenhuma tarefa encontrada com esse filtro.
           </div>
-        )}
+        ) : null}
       </motion.div>
     </PageShell>
   );

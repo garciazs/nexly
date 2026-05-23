@@ -14,23 +14,35 @@ import {
 } from "recharts";
 import { FadeUp } from "@/components/motion/fade-up";
 import { EASE_OUT } from "@/lib/motion";
-import { REVENUE_CHART } from "@/lib/dashboard/metrics";
+import { EmptyState } from "@/components/dashboard/empty-state";
+import { BarChart3 } from "lucide-react";
+import type { RevenueChartPoint } from "@/lib/dashboard/queries";
 
-const data = REVENUE_CHART;
+type DashboardChartsProps = {
+  data: RevenueChartPoint[];
+};
 
-export function DashboardCharts() {
+export function DashboardCharts({ data }: DashboardChartsProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  if (data.length === 0) {
+    return (
+      <FadeUp className="col-span-full lg:col-span-2">
+        <EmptyState
+          icon={BarChart3}
+          title="Sem receita registrada"
+          description="Quando houver pagamentos no seu workspace, o gráfico aparecerá aqui."
+        />
+      </FadeUp>
+    );
+  }
 
   return (
     <FadeUp className="col-span-full lg:col-span-2">
       <Card className="surface-card-interactive overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>Receita mensal (€)</CardTitle>
-          <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-            Ao vivo
-          </span>
         </CardHeader>
         <CardContent className="h-[300px]">
           {mounted ? (

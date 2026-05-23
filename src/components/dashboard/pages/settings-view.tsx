@@ -12,8 +12,17 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import type { OrganizationSettings } from "@/lib/dashboard/queries";
+import { PLANS } from "@/lib/constants";
 
-export function SettingsView() {
+const PLAN_LABELS: Record<string, string> = {
+  STARTER: PLANS.STARTER.name,
+  PRO: PLANS.PRO.name,
+  BUSINESS: PLANS.BUSINESS.name,
+  ENTERPRISE: PLANS.ENTERPRISE.name,
+};
+
+export function SettingsView({ organization }: { organization: OrganizationSettings | null }) {
   const { data: session } = useSession();
   const [name, setName] = useState(session?.user?.name ?? "");
   const [email, setEmail] = useState(session?.user?.email ?? "");
@@ -118,23 +127,33 @@ export function SettingsView() {
                 <CardDescription>Plano atual e dados de faturamento</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-                  <p className="font-medium">Plano Pro</p>
-                  <p className="text-sm text-muted-foreground">€49/mês · renovação em 12 Jun 2026</p>
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-4">
+                  <p className="font-medium">
+                    {organization
+                      ? `Plano ${PLAN_LABELS[organization.plan] ?? organization.plan}`
+                      : "Sem plano"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {organization
+                      ? `Workspace: ${organization.name} · ${organization.status}`
+                      : "Configure a assinatura em Cobrança"}
+                  </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="company">Empresa</Label>
+                  <Label htmlFor="company">Organização</Label>
                   <Input
                     id="company"
-                    defaultValue="Nexly Demo Ltda"
+                    defaultValue={organization?.name ?? ""}
+                    readOnly
                     className="max-w-md border-border/60 bg-muted/40"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="vat">NIF / VAT</Label>
+                  <Label htmlFor="slug">Slug</Label>
                   <Input
-                    id="vat"
-                    defaultValue="PT123456789"
+                    id="slug"
+                    defaultValue={organization?.slug ?? ""}
+                    readOnly
                     className="max-w-md border-border/60 bg-muted/40"
                   />
                 </div>
